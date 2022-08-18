@@ -46,7 +46,8 @@ sf_emissions <- read_csv(here("data", "San_Francisco_Communitywide_Greenhouse_Ga
 sf_emissions_sector <- sf_emissions |> 
   group_by(Sector_General) |> 
   summarize(sum_emissions = sum(Emissions_mtCO2e, na.rm = TRUE)) |> 
-  mutate(sum_emissions_kilotons = sum_emissions/1000)
+  mutate(sum_emissions_kilotons = sum_emissions/1000) |> 
+  mutate(sum_emissions_kilotons = round(sum_emissions_kilotons, digit = 0))
 
 sf_emissions_yr_com <- sf_emissions |> 
   group_by(Calendar_Year, Commodity_Type) |> 
@@ -71,7 +72,8 @@ ggplot(data = sf_emissions_sector,
            fill = "slateblue3") +
   labs(x = "Sum of Emissions (kilotons CO2e)", y = "General Sector", title = "San Francisco's Total Emissions by Sector Since 1990") +
   geom_text_repel(aes(label = sum_emissions_kilotons), size = 4) +
-  theme(panel.background = element_blank())
+  theme(panel.background = element_blank(),
+        panel.grid.major.x = element_line(color = "grey")) 
 
 ggsave(here("good_graph.jpeg"), width = 8, height = 8)
   
