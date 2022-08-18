@@ -1,0 +1,80 @@
+---
+title: "Day 8 Activities"
+author: "Michelle Lam"
+date: "2022-08-17"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(here)
+library(janitor)
+
+library(patchwork)
+library(ggrepel)
+library(gghighlight)
+library(paletteer)
+library(ggExtra)
+library(ggbeeswarm)
+library(gapminder)
+```
+
+### Task 1: Do your data viz worst
+```{r}
+space_launches <- read_csv(here("data", "space_launches.csv"))
+
+ggplot(data = space_launches, aes(x = launch_year, y = state_code)) +
+  geom_point() +
+  theme(panel.grid.major.x = element_line(color = "orange"),
+        panel.grid.major.y = element_line(color = "purple"),
+        panel.background = element_rect(fill = "green"),
+        axis.title = element_text(color = "green", size = 5),
+        axis.text.x = element_text(color = "pink", size = 8),
+        axis.text.y = element_text(color = "yellow", size = 15)) 
+
+ggsave(here("bad_graph.png"))
+  
+```
+
+### Task 2: Wrangling practice with SF Greenhouse Gas data
+
+```{r}
+sf_emissions <- read_csv(here("data", "San_Francisco_Communitywide_Greenhouse_Gas_Inventory.csv"))
+
+sf_emissions_sector <- sf_emissions |> 
+  group_by(Sector_General) |> 
+  summarize(sum_emissions = sum(Emissions_mtCO2e, na.rm = TRUE)) |> 
+  mutate(sum_emissions_kilotons = sum_emissions/1000)
+
+sf_emissions_yr_com <- sf_emissions |> 
+  group_by(Calendar_Year, Commodity_Type) |> 
+  summarize(sum_emissions = sum(Emissions_mtCO2e, na.rm = TRUE))
+
+sf_emissions_filtered <- sf_emissions |> 
+  filter(Calendar_Year >= 2005) |> 
+  filter(str_detect(Sector_Detail2, pattern = "PG&E")) |> 
+  select(Calendar_Year, Sector_Detail2, Emissions_mtCO2e)
+```
+
+### Task 3: Do your data viz best
+
+```{r}
+sf_emissions_yr_sector <- sf_emissions |> 
+  group_by(Sector_General, Calendar_Year) |> 
+  summarize(sum_emissions = sum(Emissions_mtCO2e, na.rm = TRUE))
+
+ggplot(data = sf_emissions_sector, 
+       aes(y = fct_reorder(Sector_General, sum_emissions_kilotons), x = sum_emissions_kilotons)) +
+  geom_bar(stat = "identity",
+           fill = "slateblue3") +
+  labs(x = "Sum of Emissions (kilotons CO2e)", y = "General Sector", title = "San Francisco's Total Emissions by Sector Since 1990") +
+  geom_text_repel(aes(label = sum_emissions_kilotons), size = 4) +
+  theme(panel.background = element_blank())
+
+ggsave(here("good_graph.jpeg"), width = 8, height = 8)
+  
+```
+
+
